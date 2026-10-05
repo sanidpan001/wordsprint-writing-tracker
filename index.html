@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en" id="top">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordSprint — Free Writing Sprint Timer &amp; WPM Writing Tracker</title>
+<meta name="description" content="WordSprint is a free writing sprint timer with live WPM readout, distraction-free focus mode, words-per-sprint trend charts, personal bests and CSV export. No signup.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#fdf6ec; --paper:#fffdf7; --primary:#ea580c; --primary-dark:#c2410c; --accent:#16a34a; --ink:#292019; --muted:#8a7a63; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+  .font-display { font-family:'Fraunces',Georgia,serif; }
+  .paper-card { background:var(--paper); border:1px solid #f0e2c8; border-radius:1.25rem; box-shadow:0 10px 30px rgba(120,70,10,.08); }
+  .arena { background:linear-gradient(180deg,#fffdf7,#fef9ef); border:2px dashed rgba(234,88,12,.35); border-radius:1.5rem; box-shadow:0 18px 50px rgba(180,90,10,.10), inset 0 0 60px rgba(253,230,180,.25); }
+  .btn-primary { background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; font-weight:700; border-radius:.9rem; padding:.8rem 1.6rem; box-shadow:0 8px 24px rgba(234,88,12,.35); transition:transform .15s ease, box-shadow .15s ease; }
+  .btn-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 12px 30px rgba(234,88,12,.45); }
+  .btn-primary:disabled { opacity:.45; cursor:not-allowed; }
+  .btn-ghost { border:1.5px solid rgba(234,88,12,.45); color:var(--primary-dark); border-radius:.9rem; padding:.7rem 1.2rem; font-weight:700; transition:background .15s ease; }
+  .btn-ghost:hover:not(:disabled) { background:rgba(234,88,12,.08); }
+  .btn-ghost:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-green { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-weight:700; border-radius:.9rem; padding:.8rem 1.6rem; box-shadow:0 8px 24px rgba(22,163,74,.3); transition:transform .15s ease; }
+  .btn-green:hover:not(:disabled) { transform:translateY(-1px); }
+  .btn-green:disabled { opacity:.45; cursor:not-allowed; }
+  .field { background:#fff; border:1.5px solid #eadbc0; border-radius:.75rem; color:var(--ink); padding:.6rem .85rem; width:100%; }
+  .field:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(234,88,12,.15); }
+  .len-chip { border:1.5px solid #e7d6b3; border-radius:9999px; padding:.45rem 1.05rem; font-weight:700; font-size:.875rem; color:#6b5a42; cursor:pointer; transition:all .15s ease; background:#fff; }
+  .len-chip:hover { border-color:var(--primary); color:var(--primary-dark); }
+  .len-chip.active { background:var(--primary); border-color:var(--primary); color:#fff; box-shadow:0 6px 16px rgba(234,88,12,.35); }
+  .stat-card { background:var(--paper); border:1px solid #f0e2c8; border-radius:1rem; padding:1rem 1.1rem; }
+  .progress-track { background:#f3e7cd; border-radius:9999px; overflow:hidden; height:.9rem; border:1px solid #e7d6b3; }
+  .progress-fill { background:linear-gradient(90deg,#fb923c,#ea580c); height:100%; transition:width .4s linear; }
+  #writingArea { background:transparent; border:none; outline:none; resize:vertical; line-height:1.9; font-size:1.05rem; }
+  #writingArea:focus { outline:none; }
+  .timer-glow { text-shadow:0 2px 24px rgba(234,88,12,.25); }
+  .pb-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.65rem .9rem; border-radius:.75rem; background:#fff; border:1px solid #f0e2c8; }
+  .session-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.7rem .9rem; border-radius:.75rem; background:#fff; border:1px solid #f0e2c8; }
+  details.faq { background:var(--paper); border:1px solid #f0e2c8; border-radius:.9rem; }
+  details.faq summary { cursor:pointer; padding:1rem 1.25rem; font-weight:600; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+  details.faq summary::-webkit-details-marker { display:none; }
+  details.faq summary::after { content:'+'; color:var(--accent); font-size:1.5rem; font-weight:700; flex:none; }
+  details.faq[open] summary::after { content:'−'; }
+  details.faq .faq-body { padding:0 1.25rem 1.25rem; color:#5f5140; line-height:1.7; }
+  .article-prose h2 { color:var(--primary-dark); font-size:1.5rem; font-weight:700; margin:2.2rem 0 .9rem; font-family:'Fraunces',Georgia,serif; }
+  .article-prose h3 { color:var(--accent); font-size:1.15rem; font-weight:700; margin:1.6rem 0 .6rem; }
+  .article-prose p { margin:.9rem 0; line-height:1.85; color:#4d4234; }
+  .article-prose ul, .article-prose ol { margin:.9rem 0; padding-left:1.4rem; color:#4d4234; line-height:1.85; }
+  .article-prose ul { list-style:disc; } .article-prose ol { list-style:decimal; }
+  .article-prose li { margin:.45rem 0; }
+  .article-prose table { width:100%; border-collapse:collapse; margin:1.2rem 0; font-size:.9rem; }
+  .article-prose th { background:rgba(234,88,12,.1); color:var(--primary-dark); text-align:left; padding:.6rem .8rem; border:1px solid #e7d6b3; }
+  .article-prose td { padding:.55rem .8rem; border:1px solid #e7d6b3; color:#4d4234; }
+  .article-prose strong { color:#2c2318; }
+  /* Focus mode: hide everything except the arena */
+  body.focusing .hide-focus { display:none !important; }
+  body.focusing #arenaWrap { max-width:56rem; }
+  body.focusing #arenaCard { min-height:80vh; }
+  body.focusing #focusExit { display:inline-flex !important; }
+  #focusExit { display:none; }
+  .rest-pulse { animation:restPulse 2s ease-in-out infinite; }
+  @keyframes restPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.03); } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Sticky header -->
+<header class="hide-focus sticky top-0 z-50" style="background:rgba(253,246,236,.94); backdrop-filter:blur(10px); border-bottom:1px solid #f0e2c8;">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5">
+      <svg width="34" height="34" viewBox="0 0 36 36" aria-hidden="true">
+        <rect x="2" y="2" width="32" height="32" rx="9" fill="#ea580c"/>
+        <path d="M10 12l4 12 3-8 3 8 4-12" stroke="#fdf6ec" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="27" cy="25" r="3.2" fill="#16a34a"/>
+      </svg>
+      <span class="text-2xl font-bold tracking-tight font-display">Word<span style="color:#ea580c">Sprint</span></span>
+    </a>
+    <nav class="flex items-center gap-5 text-sm font-semibold">
+      <a href="#top" class="hover:text-[#ea580c] transition-colors">Home</a>
+      <a href="https://fixoraa.tech" class="hover:text-[#ea580c] transition-colors">More Tools</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hide-focus max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 text-center">
+  <p class="text-xs font-bold tracking-[0.22em] uppercase" style="color:#16a34a">Timed writing sprint tracker</p>
+  <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mt-2">Sprint. <span style="color:#ea580c">Write.</span> Beat your best.</h1>
+  <p class="mt-3 max-w-2xl mx-auto" style="color:#6b5a42">Set a timer, write in a distraction-free arena, and watch your live WPM climb. WordSprint charts your words-per-sprint trends, keeps personal bests per sprint length, and exports every session to CSV.</p>
+  <div class="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold" style="background:rgba(22,163,74,.1); border:1px solid rgba(22,163,74,.5); color:#16a34a;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+    Unlimited Free Usage — no signup, no paywall, your words stay in your browser
+  </div>
+</section>
+
+<!-- TOP AD (verbatim) -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pt-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <div class="origin-top scale-[0.44] sm:scale-100 shrink-0">
+        <script>
+          atOptions = { 'key' : '4e68ac77881c17fe128a46565d9a4e8c', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script src="https://www.highrevenueformat.com/4e68ac77881c17fe128a46565d9a4e8c/invoke.js"></script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOL -->
+<main id="tool" class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Sprint setup -->
+  <section class="paper-card p-5 sm:p-7 hide-focus" aria-label="Sprint setup">
+    <div class="flex flex-wrap items-center gap-x-8 gap-y-5 justify-between">
+      <div class="flex-1 min-w-[240px]">
+        <h2 class="font-display text-xl font-bold">1 · Set your sprint</h2>
+        <p class="text-sm mt-1" style="color:#8a7a63">Pick a length or type your own. Add a rest timer between sprints.</p>
+        <div id="sprintPresets" class="flex flex-wrap gap-2 mt-3" role="group" aria-label="Sprint length presets">
+          <button type="button" class="len-chip" data-min="5">5 min</button>
+          <button type="button" class="len-chip active" data-min="15">15 min</button>
+          <button type="button" class="len-chip" data-min="25">25 min</button>
+          <button type="button" class="len-chip" data-min="30">30 min</button>
+          <button type="button" class="len-chip" data-min="50">50 min</button>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Custom (min)</span>
+          <input id="customMinutes" type="number" min="1" max="180" placeholder="e.g. 20" class="field mt-1 w-32" aria-label="Custom sprint length in minutes">
+        </label>
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Rest after (min)</span>
+          <input id="restMinutes" type="number" min="0" max="60" value="5" class="field mt-1 w-32" aria-label="Rest minutes after each sprint">
+        </label>
+      </div>
+    </div>
+    <label class="flex items-center gap-3 mt-5 cursor-pointer select-none">
+      <input id="focusToggle" type="checkbox" class="w-5 h-5 accent-[#16a34a]">
+      <span class="font-semibold text-sm">Focus mode <span class="font-normal" style="color:#8a7a63">— hide everything except the writing arena while the clock runs</span></span>
+    </label>
+  </section>
+
+  <!-- Writing arena -->
+  <div id="arenaWrap" class="max-w-5xl mx-auto mt-6">
+    <section id="arenaCard" class="arena p-5 sm:p-8" aria-label="Writing arena">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p id="sprintState" class="text-xs font-bold tracking-[0.2em] uppercase" style="color:#16a34a">Ready</p>
+          <p id="timerDisplay" class="font-display font-bold timer-glow text-5xl sm:text-6xl tabular-nums" style="color:#ea580c">15:00</p>
+        </div>
+        <div class="flex gap-6 text-center">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Live WPM</p>
+            <p id="liveWpm" class="font-display font-bold text-4xl tabular-nums" style="color:#16a34a">0</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Words</p>
+            <p id="liveWords" class="font-display font-bold text-4xl tabular-nums">0</p>
+          </div>
+        </div>
+        <button id="focusModeBtn" type="button" class="btn-ghost text-sm">Enter focus mode</button>
+        <button id="focusExit" type="button" class="btn-ghost text-sm">Exit focus mode</button>
+      </div>
+
+      <div class="progress-track mt-5" role="progressbar" aria-label="Sprint progress" aria-valuemin="0" aria-valuemax="100">
+        <div id="sprintProgressBar" class="progress-fill" style="width:0%"></div>
+      </div>
+
+      <textarea id="writingArea" class="w-full mt-5" rows="10" placeholder="Your arena is ready. Hit Start sprint and pour words onto the page — no editing, no backspacing regrets, just forward motion." aria-label="Writing area"></textarea>
+
+      <div class="flex flex-wrap gap-3 mt-5">
+        <button id="startSprint" type="button" class="btn-primary">Start sprint</button>
+        <button id="pauseSprint" type="button" class="btn-ghost" disabled>Pause</button>
+        <button id="finishSprint" type="button" class="btn-green" disabled>Finish early</button>
+        <button id="resetArena" type="button" class="btn-ghost" disabled>Reset</button>
+      </div>
+    </section>
+
+    <!-- Rest timer -->
+    <section id="restCard" class="paper-card p-5 sm:p-7 mt-6 hidden" aria-label="Rest timer">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="font-display text-xl font-bold">Rest up, writer</h2>
+          <p class="text-sm mt-1" style="color:#8a7a63">Stand, stretch, sip water. Your next sprint unlocks when the rest ends.</p>
+        </div>
+        <p id="restCountdown" class="font-display font-bold text-5xl tabular-nums rest-pulse" style="color:#16a34a">5:00</p>
+        <button id="skipRest" type="button" class="btn-ghost text-sm">Skip rest</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Dashboard -->
+  <section class="mt-10 hide-focus" aria-label="Progress dashboard">
+    <h2 class="font-display text-2xl font-bold">2 · Your progress</h2>
+    <p class="text-sm mt-1 mb-5" style="color:#8a7a63">Every finished sprint is stored privately in your browser (localStorage).</p>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="stat-card"><p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Sprints</p><p id="statSessions" class="font-display text-3xl font-bold mt-1">0</p></div>
+      <div class="stat-card"><p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Total words</p><p id="statWords" class="font-display text-3xl font-bold mt-1">0</p></div>
+      <div class="stat-card"><p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Avg WPM</p><p id="statAvgWpm" class="font-display text-3xl font-bold mt-1" style="color:#16a34a">0</p></div>
+      <div class="stat-card"><p class="text-xs font-bold uppercase tracking-wider" style="color:#8a7a63">Best WPM</p><p id="statBestWpm" class="font-display text-3xl font-bold mt-1" style="color:#ea580c">0</p></div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
+      <!-- Trend chart -->
+      <div class="paper-card p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h3 class="font-display text-lg font-bold">Words-per-sprint trend</h3>
+          <select id="trendLengthFilter" class="field !w-auto text-sm" aria-label="Filter trend by sprint length">
+            <option value="0">All lengths</option>
+          </select>
+        </div>
+        <div id="trendChart" role="img" aria-label="Words per sprint trend chart"></div>
+        <p id="trendEmpty" class="text-sm py-8 text-center" style="color:#8a7a63">No sprints yet — finish your first sprint and your trend line appears here.</p>
+      </div>
+      <!-- Personal bests -->
+      <div class="paper-card p-5 sm:p-6">
+        <h3 class="font-display text-lg font-bold mb-1">Personal bests</h3>
+        <p class="text-sm mb-4" style="color:#8a7a63">Your highest word count for each sprint length.</p>
+        <div id="pbBoard" class="space-y-2"></div>
+        <p id="pbEmpty" class="text-sm py-6 text-center" style="color:#8a7a63">No personal bests yet. Sprint, and the board fills itself.</p>
+      </div>
+    </div>
+
+    <!-- Session history -->
+    <div class="paper-card p-5 sm:p-6 mt-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="font-display text-lg font-bold">Session history</h3>
+          <p class="text-sm" style="color:#8a7a63">Newest first. Export everything to CSV for your records.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="exportCsv" type="button" class="btn-ghost text-sm">Export CSV</button>
+          <button id="clearHistory" type="button" class="btn-ghost text-sm" style="border-color:rgba(220,38,38,.5); color:#b91c1c;">Clear history</button>
+        </div>
+      </div>
+      <div id="sessionList" class="space-y-2"></div>
+      <p id="historyEmpty" class="text-sm py-6 text-center" style="color:#8a7a63">Your finished sprints will be listed here.</p>
+    </div>
+  </section>
+</main>
+
+<!-- BOTTOM AD (verbatim) -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pb-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="464498"></script>
+    </div>
+  </div>
+</div>
+
+<!-- SEO ARTICLE -->
+<article id="seo-article" class="hide-focus article-prose max-w-4xl mx-auto px-4 sm:px-6 py-10">
+
+<h2>What Is a Writing Sprint?</h2>
+<p>A writing sprint is a short, timed burst of focused writing — usually anywhere from five to fifty minutes — during which you write as much as you can without stopping to edit, research, or second-guess yourself. The only rule that matters is forward motion: keep the words coming until the timer rings. A <strong>writing sprint timer</strong> like WordSprint exists to make this practice effortless: you pick a length, the clock starts, and a live readout shows your word count and words-per-minute speed while you write. When the sprint ends, your result is saved, charted, and compared against your personal bests, so every session becomes a tiny game you can win.</p>
+<p>The concept is not new. Novelists have raced each other in "word wars" for decades, and the rise of National Novel Writing Month turned the sprint into a global ritual. What has changed is the tooling. Where writers once used kitchen timers and spreadsheets, a modern <strong>writing sprint timer</strong> combines the countdown, the live speed readout, the history log, and the trend chart in one page that loads instantly and works entirely in your browser. No accounts, no installs, no friction between the idea and the first word.</p>
+
+<h2>Why Timed Sprints Work So Well</h2>
+<p>Most writing problems are not talent problems; they are momentum problems. A blank page with no deadline invites the inner editor to take the wheel, and the inner editor is a terrible driver — it brakes at every sentence. A countdown timer changes the psychology completely. With only fifteen minutes on the clock, your brain stops asking "is this good?" and starts asking "what happens next?" That shift from evaluation to generation is the entire magic of the sprint.</p>
+<p>Research on time-boxed work supports what sprinters have always felt: a visible, finite deadline increases focus and output. The sprint also lowers the emotional stakes of starting. Sitting down to "write a novel" is paralyzing; sitting down to "write for fifteen minutes" is trivially easy. And once you start, you almost always keep going. Sprinters routinely report that their hardest sessions are the first five minutes, after which the words flow on their own — which is exactly why tracking words per sprint over time is so motivating. You can literally watch the warm-up effect in your own chart.</p>
+
+<h2>How a Writing Sprint Timer Works</h2>
+<p>Using WordSprint follows a simple loop. First, choose your sprint length — five, fifteen, twenty-five, thirty, or fifty minutes, or any custom length up to three hours. If you like, set a rest timer for the break afterward. Then press start. The arena shows a large countdown, your live word count, and your live WPM, updating as you type. You can toggle focus mode to hide everything except the writing box, which removes the temptation to check stats mid-sprint. When the timer hits zero — or when you press "finish early" — the session is recorded with its date, length, word count, and WPM, and your dashboard updates instantly.</p>
+<p>Everything is stored in your browser's localStorage, which means your sprint history is private by design: no server ever sees your words. The tool never uploads a single character. You can export your sessions to CSV whenever you want a permanent copy or wish to analyze them in a spreadsheet.</p>
+
+<h3>Picking Your Sprint Length</h3>
+<p>Different lengths serve different goals. Five-minute sprints are warm-ups and idea blasts — perfect for beating the blank page or squeezing writing into a coffee break. Fifteen minutes is the classic word-war length: long enough to build momentum, short enough to stay intense. Twenty-five minutes borrows the Pomodoro rhythm and suits writers who like a work-break cadence. Thirty to fifty minutes is deep-work territory, ideal for drafting chapters. If you are new to sprinting, start with fifteen minutes for a week and let your own trend chart tell you which length produces your best words-per-minute.</p>
+
+<h3>Setting Up Rest Timers</h3>
+<p>Sprints are intense, and intensity needs recovery. WordSprint lets you set a rest timer that starts automatically when a sprint ends — five minutes is the default. Use the break to stand up, stretch, drink water, and look away from the screen. When the rest ends, you can dive straight into the next sprint. Alternating sprint and rest blocks is how many writers comfortably produce two to three thousand words in a single evening without burnout.</p>
+
+<h2>Understanding WPM: Words Per Minute for Writers</h2>
+<p>A <strong>words per minute writing test</strong> measures raw typing speed with random text, but writing WPM is a different and more interesting number: it measures how fast you generate original prose. Most writers land between 20 and 60 WPM when drafting, with experienced sprinters hitting 80 to 100 WPM during intense bursts. Your live WPM readout in WordSprint is calculated simply — words written divided by minutes elapsed — and it naturally climbs as you warm up, which is why the number is most meaningful when compared across sessions of the same length rather than against anyone else.</p>
+<p>Do not confuse drafting WPM with your final output. Sprint writing is intentionally rough; the editing pass comes later and always will. The value of the WPM number is comparative: are you faster in the morning or the evening? Do twenty-five-minute sprints beat fifteen-minute ones for you? Your personal trend chart answers these questions with your own data instead of generic advice.</p>
+<table>
+  <thead><tr><th>Drafting WPM</th><th>What it usually means</th></tr></thead>
+  <tbody>
+    <tr><td>Under 20</td><td>Heavy outlining or research-heavy writing; common for nonfiction first drafts.</td></tr>
+    <tr><td>20–40</td><td>A steady, sustainable drafting pace for most fiction and blog writers.</td></tr>
+    <tr><td>40–60</td><td>Strong sprint pace; typical of writers warmed up and in flow.</td></tr>
+    <tr><td>60–100</td><td>Intense burst pace, usually in short sprints with a clear plan.</td></tr>
+    <tr><td>Over 100</td><td>Rare sustained pace; often dialogue-heavy or highly planned scenes.</td></tr>
+  </tbody>
+</table>
+
+<h2>Writing Sprints and NaNoWriMo</h2>
+<p>Every November, hundreds of thousands of writers attempt National Novel Writing Month: fifty thousand words in thirty days, or about 1,667 words a day. The math is unforgiving, and the writers who finish almost always rely on sprints. A <strong>nanowrimo word count tracker</strong> that only logs daily totals tells you whether you are behind; a sprint-based tracker tells you how to catch up. Two focused twenty-five-minute sprints at 45 WPM produce over 2,200 words — more than a full day's NaNo quota — in under an hour of actual writing.</p>
+<p>WordSprint works beautifully as a <strong>nanowrimo word count tracker</strong> because it records every session with its date. During November, your trend chart becomes a visual diary of the month: the climbing bars of week one, the mid-month slump every veteran recognizes, and the frantic final-week surge. Export your November sessions to CSV and you have a permanent record of exactly how the novel got written, sprint by sprint. Many writers also use the personal-bests board as a November game: pick your weakest sprint length and try to topple its record before the month ends.</p>
+
+<h2>Tracking Progress: Words-Per-Sprint Trends</h2>
+<p>A single sprint result is a snapshot; a trend is a story. WordSprint's words-per-sprint trend chart plots every finished session oldest to newest, so you can see your output climbing over weeks and months. Filter the chart by sprint length to compare like with like — your fifteen-minute trend and your fifty-minute trend are different stories and both worth watching.</p>
+<p>Trends reveal patterns you would never notice otherwise. Many writers discover their Tuesday-evening sprints consistently outperform their Sunday-morning ones, or that sessions after a five-minute rest beat back-to-back marathons. The chart also smooths out bad days: one weak sprint looks like noise against a rising line, which keeps a single off session from feeling like failure. If you export to CSV, you can go further — correlate your WPM with time of day, sprint length, or streak length in any spreadsheet and build a genuinely personal writing science.</p>
+
+<h2>Personal Bests: Why They Work</h2>
+<p>WordSprint keeps a separate personal best for each sprint length: your highest word count ever achieved in five minutes, in fifteen, in twenty-five, and so on. This design matters. A single global best would always belong to the longest sprint and tell you nothing; per-length bests give you five or six records to chase, and there is almost always one within reach on any given day.</p>
+<p>Chasing a personal best reframes the psychology of the session. Instead of the vague pressure to "write well," you have a concrete, friendly target: 412 words in fifteen minutes, set last Thursday. Beat it by one word and the board updates. Writers who gamify their practice this way consistently report higher session counts — not because they care about the number, but because the number gives the session a shape. And on days when the words will not come, aiming for a modest five-minute best instead of a fifty-minute grind is often the difference between writing something and writing nothing.</p>
+
+<h2>How to Run Your First Sprint (Step by Step)</h2>
+<ol>
+  <li><strong>Decide what you are writing.</strong> A scene, a blog section, a journal entry — know the target before the clock starts so the first minute is not spent deciding.</li>
+  <li><strong>Choose fifteen minutes.</strong> It is the sweet spot for beginners: short enough to stay fierce, long enough to find flow.</li>
+  <li><strong>Silence everything.</strong> Phone face-down, notifications off, tabs closed. Consider focus mode in WordSprint to hide the rest of the page.</li>
+  <li><strong>Start the timer and write.</strong> Do not edit, do not delete whole paragraphs, do not look up that word. Forward motion only.</li>
+  <li><strong>When the timer ends, stop.</strong> Even mid-sentence — especially mid-sentence, because it makes starting tomorrow easier.</li>
+  <li><strong>Rest five minutes.</strong> Stand, stretch, breathe. Then check your result and, if you like, sprint again.</li>
+</ol>
+
+<h2>Sprint Lengths Compared</h2>
+<table>
+  <thead><tr><th>Length</th><th>Best for</th><th>Typical output</th></tr></thead>
+  <tbody>
+    <tr><td>5 minutes</td><td>Warm-ups, beating resistance, micro-gaps in the day</td><td>100–400 words</td></tr>
+    <tr><td>15 minutes</td><td>Classic word wars, daily habit building</td><td>300–900 words</td></tr>
+    <tr><td>25 minutes</td><td>Pomodoro-style work blocks, chapter drafting</td><td>500–1,500 words</td></tr>
+    <tr><td>30 minutes</td><td>Deep scenes, blog posts in one sitting</td><td>600–1,800 words</td></tr>
+    <tr><td>50 minutes</td><td>Deep work, long chapters, weekend sessions</td><td>1,000–3,000 words</td></tr>
+  </tbody>
+</table>
+<p>Typical outputs assume a drafting pace of 20–60 WPM. Your own numbers will vary — that is precisely what the personal-bests board is for.</p>
+
+<h2>Tips to Increase Your Sprint Output</h2>
+<ul>
+  <li><strong>End mid-sentence.</strong> Hemingway's famous trick: stopping in the middle of a thought means tomorrow's first words are already half-written.</li>
+  <li><strong>Outline loosely first.</strong> Three bullet points of "what happens next" can double sprint WPM because you never pause to plan.</li>
+  <li><strong>Separate drafting from editing.</strong> Promise yourself an editing pass later; during the sprint, typos are trophies.</li>
+  <li><strong>Sprint at the same time daily.</strong> Habit stacking — coffee, then sprint — removes the daily "when should I write?" negotiation.</li>
+  <li><strong>Use rest timers religiously.</strong> Skipping breaks feels productive but collapses output by the third sprint; rested sprinters outproduce tired ones.</li>
+  <li><strong>Review your trend weekly.</strong> A two-minute glance at your chart tells you which lengths and times work — then do more of those.</li>
+  <li><strong>Lower the bar on bad days.</strong> A five-minute, 100-word sprint keeps the streak of showing up alive, and showing up is the whole game.</li>
+</ul>
+
+<h2>Exporting and Owning Your Data</h2>
+<p>Your sprint history belongs to you. WordSprint's CSV export downloads every session — date, sprint length, word count, WPM, and whether focus mode was on — in a format any spreadsheet can open. Writers use these exports to build monthly reports, to back up years of practice data, or to analyze correlations the built-in chart does not show. Because the data lives in your browser until you export it, there is no account to lose and no subscription that can lock you out of your own history. If you switch devices, export on the old one and keep the CSV as your permanent archive.</p>
+<p>Whether you are chasing a NaNoWriMo win, building a daily writing habit, or simply curious how fast your imagination can move when the clock is ticking, the method is the same: set the timer, enter the arena, and write. Your first personal best is fifteen minutes away.</p>
+
+</article>
+
+<!-- FAQS -->
+<section class="hide-focus max-w-4xl mx-auto px-4 sm:px-6 pb-4" aria-label="Frequently asked questions">
+  <h2 class="font-display text-2xl font-bold mb-5 text-center">Frequently asked questions</h2>
+  <div class="space-y-3">
+    <details class="faq">
+      <summary>What is a writing sprint timer?</summary>
+      <div class="faq-body">A writing sprint timer is a countdown tool for timed bursts of focused writing. You set a length — say 15 minutes — and write as much as you can until the timer rings, without stopping to edit. WordSprint adds a live word count, a live WPM readout, a distraction-free focus mode, and automatic session logging so every sprint feeds your personal trend chart.</div>
+    </details>
+    <details class="faq">
+      <summary>How many words should I write in a 15-minute sprint?</summary>
+      <div class="faq-body">Most writers produce 300–900 words in a 15-minute sprint, depending on experience and how planned the scene is. Beginners often land around 250–400 words, while warmed-up sprinters regularly top 600. Rather than chasing a universal target, use WordSprint's personal-bests board: your own 15-minute record is the only number that matters, and beating it by a single word counts as a win.</div>
+    </details>
+    <details class="faq">
+      <summary>What is a good WPM for writing?</summary>
+      <div class="faq-body">A words per minute writing test measures typing speed, but drafting WPM — generating original prose — is typically lower: 20–40 WPM is a steady sustainable pace, 40–60 is strong sprint pace, and 60–100 appears in intense short bursts. Your WPM naturally climbs as you warm up within a session, so compare sessions of the same length over time instead of comparing yourself to others.</div>
+    </details>
+    <details class="faq">
+      <summary>Can I use WordSprint as a NaNoWriMo word count tracker?</summary>
+      <div class="faq-body">Yes — it works especially well as a nanowrimo word count tracker. Every finished sprint is saved with its date, so during November your trend chart becomes a visual diary of the month. Two 25-minute sprints at 45 WPM already cover a full 1,667-word daily NaNo quota, and the CSV export gives you a permanent sprint-by-sprint record of how the 50,000 words got written.</div>
+    </details>
+    <details class="faq">
+      <summary>Where is my sprint data stored? Is it private?</summary>
+      <div class="faq-body">All sessions are stored in your browser's localStorage — on your device only. Nothing you write and no session data is ever uploaded to a server. You can export everything to CSV for backup or analysis, and clear your history at any time with one click. Clearing your browser's site data will also remove the stored sessions, so export first if they matter to you.</div>
+    </details>
+    <details class="faq">
+      <summary>What are rest timers and why should I use them?</summary>
+      <div class="faq-body">Rest timers count down a short break — five minutes by default — automatically after each sprint ends. Sprinting is cognitively intense, and writers who take real breaks sustain higher output across multiple sessions than those who grind through. Use the rest to stand, stretch, and look away from the screen; when it ends, you can start your next sprint refreshed instead of depleted.</div>
+    </details>
+  </div>
+</section>
+
+<!-- JSON-LD FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a writing sprint timer?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A writing sprint timer is a countdown tool for timed bursts of focused writing. You set a length — say 15 minutes — and write as much as you can until the timer rings, without stopping to edit. WordSprint adds a live word count, a live WPM readout, a distraction-free focus mode, and automatic session logging so every sprint feeds your personal trend chart." }
+    },
+    {
+      "@type": "Question",
+      "name": "How many words should I write in a 15-minute sprint?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Most writers produce 300–900 words in a 15-minute sprint, depending on experience and how planned the scene is. Beginners often land around 250–400 words, while warmed-up sprinters regularly top 600. Use WordSprint's personal-bests board: your own 15-minute record is the only number that matters." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a good WPM for writing?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A words per minute writing test measures typing speed, but drafting WPM — generating original prose — is typically lower: 20–40 WPM is a steady sustainable pace, 40–60 is strong sprint pace, and 60–100 appears in intense short bursts. Compare sessions of the same length over time instead of comparing yourself to others." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use WordSprint as a NaNoWriMo word count tracker?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — it works especially well as a nanowrimo word count tracker. Every finished sprint is saved with its date, so during November your trend chart becomes a visual diary of the month. Two 25-minute sprints at 45 WPM already cover a full 1,667-word daily NaNo quota, and the CSV export gives you a permanent sprint-by-sprint record." }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is my sprint data stored? Is it private?",
+      "acceptedAnswer": { "@type": "Answer", "text": "All sessions are stored in your browser's localStorage — on your device only. Nothing you write and no session data is ever uploaded to a server. You can export everything to CSV for backup or analysis, and clear your history at any time with one click." }
+    },
+    {
+      "@type": "Question",
+      "name": "What are rest timers and why should I use them?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Rest timers count down a short break — five minutes by default — automatically after each sprint ends. Sprinting is cognitively intense, and writers who take real breaks sustain higher output across multiple sessions than those who grind through." }
+    }
+  ]
+}
+</script>
+
+<!-- Footer -->
+<footer class="hide-focus border-t mt-8" style="border-color:#f0e2c8;">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-sm" style="color:#8a7a63">
+    <p><span class="font-display font-bold" style="color:#292019">WordSprint</span> — free writing sprint timer. Your words never leave your browser.</p>
+    <nav class="flex items-center gap-5 font-semibold">
+      <a href="#top" class="hover:text-[#ea580c]">Home</a>
+      <a href="https://fixoraa.tech" class="hover:text-[#ea580c]">More Tools</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- Inlined pure-logic lib -->
+<script id="v3-wordsprint-writing-tracker-lib">
+/* WordSprint pure logic — timed writing-sprint tracker.
+ * Pure functions only: no document/window access, no DOM, no network.
+ * Core math:
+ *     words  = count of whitespace-separated tokens in the text
+ *     wpm    = words / minutes elapsed   (0 words or 0 elapsed -> 0)
+ */
+var WordSprint = (function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------ */
+  /* Helpers                                                            */
+  /* ------------------------------------------------------------------ */
+  function num(v, fallback) {
+    var n = Number(v);
+    return (isFinite(n) ? n : fallback);
+  }
+
+  function round1(n) {
+    return Math.round((n + 1e-9) * 10) / 10;
+  }
+
+  function cleanStr(s) {
+    return (s === null || s === undefined) ? '' : String(s).trim();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Core word / WPM math                                               */
+  /* ------------------------------------------------------------------ */
+
+  // Count words: non-empty whitespace-separated tokens.
+  function countWords(text) {
+    var t = cleanStr(text);
+    if (!t) return 0;
+    return t.split(/\s+/).filter(function (w) { return w.length > 0; }).length;
+  }
+
+  // WPM = words / minutes elapsed. Non-positive or non-numeric input -> 0.
+  function calcWPM(words, elapsedSec) {
+    var w = num(words, 0);
+    var s = num(elapsedSec, 0);
+    if (w <= 0 || s <= 0) return 0;
+    return round1(w / (s / 60));
+  }
+
+  // Format seconds as M:SS (e.g. 65 -> "1:05", 5 -> "0:05").
+  function formatClock(totalSec) {
+    var s = Math.max(0, Math.floor(num(totalSec, 0)));
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    return m + ':' + (r < 10 ? '0' + r : '' + r);
+  }
+
+  // Sprint progress as 0..100 (clamped). Non-positive total -> 0.
+  function sprintProgress(elapsedSec, totalSec) {
+    var e = num(elapsedSec, 0);
+    var t = num(totalSec, 0);
+    if (t <= 0 || e <= 0) return 0;
+    var p = (e / t) * 100;
+    return p >= 100 ? 100 : round1(p);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Session storage math (pure — caller persists to localStorage)      */
+  /* ------------------------------------------------------------------ */
+
+  // Validate & normalize one session record. Returns null when invalid.
+  // Shape: { id, date (ISO string), lengthMin, words, wpm, focus }
+  function normalizeSession(raw) {
+    if (!raw) return null;
+    var lengthMin = num(raw.lengthMin, 0);
+    var words = Math.floor(num(raw.words, -1));
+    if (lengthMin <= 0 || words < 0) return null;
+    var date = cleanStr(raw.date) || new Date().toISOString();
+    if (isNaN(Date.parse(date))) date = new Date().toISOString();
+    var wpm = raw.wpm !== undefined && raw.wpm !== null
+      ? num(raw.wpm, 0)
+      : calcWPM(words, lengthMin * 60);
+    if (wpm < 0) wpm = 0;
+    return {
+      id: cleanStr(raw.id) || ('ws-' + Date.now() + '-' + Math.floor(Math.random() * 1e6)),
+      date: date,
+      lengthMin: lengthMin,
+      words: words,
+      wpm: round1(wpm),
+      focus: !!raw.focus
+    };
+  }
+
+  // Append a validated session. Never mutates the input array.
+  // Returns { sessions, ok, error, session }.
+  function addSession(sessions, raw) {
+    var list = Array.isArray(sessions) ? sessions.slice() : [];
+    var s = normalizeSession(raw);
+    if (!s) return { sessions: list, ok: false, error: 'invalid-session', session: null };
+    list.push(s);
+    return { sessions: list, ok: true, error: null, session: s };
+  }
+
+  // Aggregate stats across all sessions.
+  function sessionStats(sessions) {
+    var list = Array.isArray(sessions) ? sessions : [];
+    var totalWords = 0, totalMinutes = 0, bestWpm = 0, wpmSum = 0;
+    for (var i = 0; i < list.length; i++) {
+      var s = list[i];
+      totalWords += num(s.words, 0);
+      totalMinutes += num(s.lengthMin, 0);
+      var w = num(s.wpm, 0);
+      wpmSum += w;
+      if (w > bestWpm) bestWpm = w;
+    }
+    return {
+      count: list.length,
+      totalWords: totalWords,
+      totalMinutes: totalMinutes,
+      bestWpm: round1(bestWpm),
+      avgWpm: list.length ? round1(wpmSum / list.length) : 0
+    };
+  }
+
+  // Personal bests per sprint length: highest word count (and its WPM)
+  // for each distinct lengthMin. Sorted by length ascending.
+  function personalBests(sessions) {
+    var list = Array.isArray(sessions) ? sessions : [];
+    var byLen = {};
+    for (var i = 0; i < list.length; i++) {
+      var s = list[i];
+      var len = num(s.lengthMin, 0);
+      var words = num(s.words, 0);
+      if (len <= 0) continue;
+      var cur = byLen[len];
+      if (!cur || words > cur.bestWords) {
+        byLen[len] = { lengthMin: len, bestWords: words, bestWpm: num(s.wpm, 0), sessions: (cur ? cur.sessions : 0) + 1 };
+      } else {
+        cur.sessions += 1;
+      }
+    }
+    var out = [];
+    for (var k in byLen) {
+      if (Object.prototype.hasOwnProperty.call(byLen, k)) out.push(byLen[k]);
+    }
+    out.sort(function (a, b) { return a.lengthMin - b.lengthMin; });
+    return out;
+  }
+
+  // Trend series for the chart: sessions sorted oldest->newest.
+  // Optional lengthMin filter (0/null = all lengths).
+  // Returns [{ date, label, words, wpm }]; label is "M/D".
+  function trendSeries(sessions, lengthMin) {
+    var list = Array.isArray(sessions) ? sessions.slice() : [];
+    var len = num(lengthMin, 0);
+    var filtered = [];
+    for (var i = 0; i < list.length; i++) {
+      var s = list[i];
+      if (len > 0 && num(s.lengthMin, 0) !== len) continue;
+      filtered.push(s);
+    }
+    filtered.sort(function (a, b) {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+    return filtered.map(function (s) {
+      var d = new Date(s.date);
+      var label = isNaN(d.getTime()) ? '' : (d.getMonth() + 1) + '/' + d.getDate();
+      return { date: s.date, label: label, words: num(s.words, 0), wpm: num(s.wpm, 0) };
+    });
+  }
+
+  // Newest n sessions, newest-first. n <= 0 returns [].
+  function recentSessions(sessions, n) {
+    var list = Array.isArray(sessions) ? sessions.slice() : [];
+    var count = Math.floor(num(n, 5));
+    if (count <= 0) return [];
+    list.sort(function (a, b) {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+    return list.slice(0, count);
+  }
+
+  // Remove a session by id. Returns { sessions, removed }.
+  function removeSession(sessions, id) {
+    var list = Array.isArray(sessions) ? sessions : [];
+    var key = cleanStr(id);
+    var removed = false;
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && cleanStr(list[i].id) === key && key) { removed = true; continue; }
+      out.push(list[i]);
+    }
+    return { sessions: out, removed: removed };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* CSV export (pure)                                                  */
+  /* ------------------------------------------------------------------ */
+
+  // Escape one CSV field: quote when it contains , " or newline.
+  function csvEscape(v) {
+    var s = (v === null || v === undefined) ? '' : String(v);
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  // Build a CSV string: header row + one row per session (oldest first).
+  function sessionsToCSV(sessions) {
+    var list = Array.isArray(sessions) ? sessions.slice() : [];
+    list.sort(function (a, b) {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+    var header = ['date', 'sprint_minutes', 'words', 'wpm', 'focus_mode'].join(',');
+    var rows = list.map(function (s) {
+      return [
+        csvEscape(s.date),
+        csvEscape(num(s.lengthMin, 0)),
+        csvEscape(num(s.words, 0)),
+        csvEscape(num(s.wpm, 0)),
+        csvEscape(s.focus ? 'yes' : 'no')
+      ].join(',');
+    });
+    return rows.length ? header + '\n' + rows.join('\n') + '\n' : header + '\n';
+  }
+
+  return {
+    countWords: countWords,
+    calcWPM: calcWPM,
+    formatClock: formatClock,
+    sprintProgress: sprintProgress,
+    normalizeSession: normalizeSession,
+    addSession: addSession,
+    sessionStats: sessionStats,
+    personalBests: personalBests,
+    trendSeries: trendSeries,
+    recentSessions: recentSessions,
+    removeSession: removeSession,
+    csvEscape: csvEscape,
+    sessionsToCSV: sessionsToCSV
+  };
+})();
+
+</script>
+
+<!-- UI wiring (separate from the pure lib) -->
+<script>
+(function () {
+  'use strict';
+  var WS = WordSprint;
+  var LS_KEY = 'wordsprint-sessions-v1';
+
+  function $(id) { return document.getElementById(id); }
+
+  var els = {
+    presets: $('sprintPresets'), custom: $('customMinutes'), rest: $('restMinutes'),
+    focusToggle: $('focusToggle'),
+    state: $('sprintState'), timer: $('timerDisplay'), wpm: $('liveWpm'), words: $('liveWords'),
+    bar: $('sprintProgressBar'), area: $('writingArea'),
+    start: $('startSprint'), pause: $('pauseSprint'), finish: $('finishSprint'), reset: $('resetArena'),
+    focusBtn: $('focusModeBtn'), focusExit: $('focusExit'),
+    restCard: $('restCard'), restCount: $('restCountdown'), skipRest: $('skipRest'),
+    statSessions: $('statSessions'), statWords: $('statWords'), statAvg: $('statAvgWpm'), statBest: $('statBestWpm'),
+    pbBoard: $('pbBoard'), pbEmpty: $('pbEmpty'),
+    trend: $('trendChart'), trendEmpty: $('trendEmpty'), trendFilter: $('trendLengthFilter'),
+    list: $('sessionList'), historyEmpty: $('historyEmpty'),
+    exportCsv: $('exportCsv'), clear: $('clearHistory')
+  };
+
+  /* ---------------- state ---------------- */
+  var sessions = loadSessions();
+  var sprintMin = 15;
+  var mode = 'idle'; // idle | running | paused | resting
+  var totalSec = 0, elapsedBase = 0, startedAt = 0, tickId = null;
+  var restTotal = 0, restBase = 0, restStartedAt = 0;
+
+  function loadSessions() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter(function (s) { return WS.normalizeSession(s); }) : [];
+    } catch (e) { return []; }
+  }
+  function saveSessions() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(sessions)); } catch (e) {}
+  }
+
+  function nowElapsed() {
+    if (mode === 'running') return elapsedBase + (Date.now() - startedAt) / 1000;
+    return elapsedBase;
+  }
+  function restElapsed() {
+    if (mode === 'resting') return restBase + (Date.now() - restStartedAt) / 1000;
+    return restBase;
+  }
+
+  /* ---------------- sprint length ---------------- */
+  function currentLengthMin() {
+    var c = parseInt(els.custom.value, 10);
+    if (isFinite(c) && c >= 1 && c <= 180) return c;
+    return sprintMin;
+  }
+  function refreshIdleTimer() {
+    if (mode !== 'idle') return;
+    els.timer.textContent = WS.formatClock(currentLengthMin() * 60);
+    els.bar.style.width = '0%';
+  }
+  els.presets.addEventListener('click', function (e) {
+    var b = e.target.closest('.len-chip');
+    if (!b || mode === 'running' || mode === 'paused') return;
+    sprintMin = parseInt(b.getAttribute('data-min'), 10) || 15;
+    els.custom.value = '';
+    var chips = els.presets.querySelectorAll('.len-chip');
+    for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+    b.classList.add('active');
+    refreshIdleTimer();
+  });
+  els.custom.addEventListener('input', function () {
+    if (mode === 'running' || mode === 'paused') return;
+    var chips = els.presets.querySelectorAll('.len-chip');
+    for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+    refreshIdleTimer();
+  });
+
+  /* ---------------- live readouts ---------------- */
+  function updateReadouts(elapsedSec) {
+    var w = WS.countWords(els.area.value);
+    els.words.textContent = w.toLocaleString('en-US');
+    els.wpm.textContent = WS.calcWPM(w, elapsedSec);
+    els.bar.style.width = WS.sprintProgress(elapsedSec, totalSec) + '%';
+    els.bar.parentElement.setAttribute('aria-valuenow', Math.round(WS.sprintProgress(elapsedSec, totalSec)));
+  }
+  els.area.addEventListener('input', function () { updateReadouts(nowElapsed()); });
+
+  function setButtons() {
+    var running = mode === 'running', paused = mode === 'paused', idle = mode === 'idle';
+    els.start.disabled = !idle;
+    els.pause.disabled = !(running || paused);
+    els.pause.textContent = paused ? 'Resume' : 'Pause';
+    els.finish.disabled = !(running || paused);
+    els.reset.disabled = !(running || paused);
+  }
+
+  /* ---------------- sprint control ---------------- */
+  function tick() {
+    var e = nowElapsed();
+    if (e >= totalSec) { finishSprint(false); return; }
+    var remaining = Math.max(0, Math.ceil(totalSec - e));
+    els.timer.textContent = WS.formatClock(remaining);
+    updateReadouts(e);
+  }
+
+  function startSprint() {
+    if (mode !== 'idle') return;
+    var len = currentLengthMin();
+    if (!(len >= 1)) return;
+    totalSec = len * 60;
+    elapsedBase = 0;
+    startedAt = Date.now();
+    mode = 'running';
+    els.state.textContent = 'Sprinting — ' + len + ' min';
+    els.state.style.color = '#ea580c';
+    if (els.focusToggle.checked) document.body.classList.add('focusing');
+    els.area.focus();
+    tickId = setInterval(tick, 500);
+    tick();
+    setButtons();
+  }
+
+  function togglePause() {
+    if (mode === 'running') {
+      elapsedBase = nowElapsed();
+      clearInterval(tickId); tickId = null;
+      mode = 'paused';
+      els.state.textContent = 'Paused';
+      els.state.style.color = '#8a7a63';
+    } else if (mode === 'paused') {
+      startedAt = Date.now();
+      mode = 'running';
+      els.state.textContent = 'Sprinting';
+      els.state.style.color = '#ea580c';
+      tickId = setInterval(tick, 500);
+      tick();
+    }
+    setButtons();
+  }
+
+  function finishSprint(early) {
+    if (mode !== 'running' && mode !== 'paused') return;
+    clearInterval(tickId); tickId = null;
+    var e = Math.min(nowElapsed(), totalSec);
+    var w = WS.countWords(els.area.value);
+    var wpm = WS.calcWPM(w, e > 0 ? e : 1);
+    var len = currentLengthMin();
+    var res = WS.addSession(sessions, {
+      date: new Date().toISOString(),
+      lengthMin: len,
+      words: w,
+      wpm: wpm,
+      focus: document.body.classList.contains('focusing')
+    });
+    if (res.ok) { sessions = res.sessions; saveSessions(); }
+    document.body.classList.remove('focusing');
+    mode = 'idle';
+    els.state.textContent = early ? 'Sprint finished early — ' + w + ' words' : 'Sprint complete — ' + w + ' words, ' + wpm + ' WPM';
+    els.state.style.color = '#16a34a';
+    els.timer.textContent = WS.formatClock(len * 60);
+    els.bar.style.width = '0%';
+    setButtons();
+    renderDashboard();
+    var restMin = parseInt(els.rest.value, 10);
+    if (isFinite(restMin) && restMin > 0) startRest(restMin);
+  }
+
+  function resetArena() {
+    if (mode !== 'running' && mode !== 'paused') return;
+    clearInterval(tickId); tickId = null;
+    mode = 'idle';
+    elapsedBase = 0;
+    document.body.classList.remove('focusing');
+    els.state.textContent = 'Ready';
+    els.state.style.color = '#16a34a';
+    refreshIdleTimer();
+    updateReadouts(0);
+    setButtons();
+  }
+
+  els.start.addEventListener('click', startSprint);
+  els.pause.addEventListener('click', togglePause);
+  els.finish.addEventListener('click', function () { finishSprint(true); });
+  els.reset.addEventListener('click', resetArena);
+
+  /* ---------------- focus mode ---------------- */
+  function setFocus(on) {
+    document.body.classList.toggle('focusing', on);
+    els.focusToggle.checked = on;
+  }
+  els.focusBtn.addEventListener('click', function () { setFocus(true); els.area.focus(); });
+  els.focusExit.addEventListener('click', function () { setFocus(false); });
+  els.focusToggle.addEventListener('change', function () { setFocus(els.focusToggle.checked); });
+
+  /* ---------------- rest timer ---------------- */
+  function startRest(min) {
+    restTotal = min * 60;
+    restBase = 0;
+    restStartedAt = Date.now();
+    mode = 'resting';
+    els.restCard.classList.remove('hidden');
+    els.restCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    tickId = setInterval(restTick, 500);
+    restTick();
+    setButtons();
+  }
+  function restTick() {
+    var e = restElapsed();
+    if (e >= restTotal) { endRest(); return; }
+    els.restCount.textContent = WS.formatClock(Math.max(0, Math.ceil(restTotal - e)));
+  }
+  function endRest() {
+    clearInterval(tickId); tickId = null;
+    mode = 'idle';
+    els.restCard.classList.add('hidden');
+    els.state.textContent = 'Rested — ready for your next sprint';
+    els.state.style.color = '#16a34a';
+    setButtons();
+  }
+  els.skipRest.addEventListener('click', endRest);
+
+  /* ---------------- dashboard ---------------- */
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +
+           d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function renderStats() {
+    var st = WS.sessionStats(sessions);
+    els.statSessions.textContent = st.count;
+    els.statWords.textContent = st.totalWords.toLocaleString('en-US');
+    els.statAvg.textContent = st.avgWpm;
+    els.statBest.textContent = st.bestWpm;
+  }
+
+  function renderPBs() {
+    var pbs = WS.personalBests(sessions);
+    els.pbEmpty.style.display = pbs.length ? 'none' : '';
+    els.pbBoard.innerHTML = '';
+    pbs.forEach(function (p) {
+      var row = document.createElement('div');
+      row.className = 'pb-row';
+      row.innerHTML = '<span class="font-bold text-sm">' + p.lengthMin + ' min sprint</span>' +
+        '<span class="text-sm"><strong style="color:#ea580c">' + p.bestWords.toLocaleString('en-US') + ' words</strong>' +
+        ' <span style="color:#8a7a63">· ' + p.bestWpm + ' WPM · ' + p.sessions + ' sprint' + (p.sessions === 1 ? '' : 's') + '</span></span>';
+      els.pbBoard.appendChild(row);
+    });
+  }
+
+  function distinctLengths() {
+    var seen = {}, out = [];
+    sessions.forEach(function (s) {
+      var l = s.lengthMin;
+      if (!seen[l]) { seen[l] = true; out.push(l); }
+    });
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  function renderTrendFilter() {
+    var cur = els.trendFilter.value;
+    els.trendFilter.innerHTML = '<option value="0">All lengths</option>';
+    distinctLengths().forEach(function (l) {
+      var o = document.createElement('option');
+      o.value = String(l);
+      o.textContent = l + ' min sprints';
+      els.trendFilter.appendChild(o);
+    });
+    if (cur && els.trendFilter.querySelector('option[value="' + cur + '"]')) els.trendFilter.value = cur;
+  }
+  els.trendFilter.addEventListener('change', renderTrend);
+
+  function renderTrend() {
+    renderTrendFilter();
+    var len = parseInt(els.trendFilter.value, 10) || 0;
+    var pts = WS.trendSeries(sessions, len).slice(-30);
+    els.trendEmpty.style.display = pts.length ? 'none' : '';
+    els.trend.innerHTML = '';
+    if (!pts.length) return;
+    var W = 560, H = 220, padL = 40, padB = 26, padT = 18;
+    var maxW = 0;
+    pts.forEach(function (p) { if (p.words > maxW) maxW = p.words; });
+    maxW = Math.max(maxW, 10);
+    var cw = (W - padL - 10) / pts.length;
+    var bw = Math.max(6, Math.min(34, cw * 0.62));
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full" role="presentation">';
+    for (var g = 0; g <= 4; g++) {
+      var y = padT + (H - padT - padB) * g / 4;
+      var val = Math.round(maxW * (1 - g / 4));
+      svg += '<line x1="' + padL + '" y1="' + y + '" x2="' + W + '" y2="' + y + '" stroke="#f0e2c8" stroke-width="1"/>' +
+             '<text x="' + (padL - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="#8a7a63">' + val + '</text>';
+    }
+    var best = 0;
+    pts.forEach(function (p) { if (p.words > best) best = p.words; });
+    pts.forEach(function (p, i) {
+      var h = (H - padT - padB) * (p.words / maxW);
+      var x = padL + cw * i + (cw - bw) / 2;
+      var y = H - padB - h;
+      var color = p.words === best && best > 0 ? '#ea580c' : '#16a34a';
+      svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" fill="' + color + '" opacity="0.85">' +
+             '<title>' + p.label + ': ' + p.words + ' words, ' + p.wpm + ' WPM</title></rect>';
+      if (pts.length <= 12 || i % Math.ceil(pts.length / 8) === 0) {
+        svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#8a7a63">' + p.label + '</text>';
+      }
+    });
+    svg += '</svg>';
+    els.trend.innerHTML = svg;
+  }
+
+  function renderList() {
+    var recent = WS.recentSessions(sessions, 20);
+    els.historyEmpty.style.display = recent.length ? 'none' : '';
+    els.list.innerHTML = '';
+    recent.forEach(function (s) {
+      var row = document.createElement('div');
+      row.className = 'session-row';
+      row.innerHTML = '<div><p class="font-bold text-sm">' + s.words.toLocaleString('en-US') + ' words <span class="font-normal" style="color:#8a7a63">· ' + s.wpm + ' WPM</span></p>' +
+        '<p class="text-xs" style="color:#8a7a63">' + fmtDate(s.date) + ' · ' + s.lengthMin + ' min' + (s.focus ? ' · focus mode' : '') + '</p></div>';
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn-ghost text-xs !py-1.5 !px-3';
+      del.textContent = 'Delete';
+      del.setAttribute('aria-label', 'Delete session');
+      del.addEventListener('click', function () {
+        var r = WS.removeSession(sessions, s.id);
+        sessions = r.sessions;
+        saveSessions();
+        renderDashboard();
+      });
+      row.appendChild(del);
+      els.list.appendChild(row);
+    });
+  }
+
+  function renderDashboard() {
+    renderStats();
+    renderPBs();
+    renderTrend();
+    renderList();
+  }
+
+  /* ---------------- export / clear ---------------- */
+  els.exportCsv.addEventListener('click', function () {
+    if (!sessions.length) { alert('No sessions to export yet — finish a sprint first.'); return; }
+    var csv = WS.sessionsToCSV(sessions);
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'wordsprint-sessions.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+  els.clear.addEventListener('click', function () {
+    if (!sessions.length) return;
+    if (confirm('Delete all ' + sessions.length + ' saved sprint sessions? This cannot be undone.')) {
+      sessions = [];
+      saveSessions();
+      renderDashboard();
+    }
+  });
+
+  /* ---------------- init ---------------- */
+  refreshIdleTimer();
+  updateReadouts(0);
+  setButtons();
+  renderDashboard();
+})();
+</script>
+</body>
+</html>
